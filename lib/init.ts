@@ -9,19 +9,30 @@ import bcrypt from 'bcryptjs';
 // 默认密码的 bcrypt hash ("admin")
 const DEFAULT_PASSWORD_HASH = bcrypt.hashSync('admin', 10);
 
+// 初始化日志（供 /api/setup 返回，便于排查）
+let initLog: string[] = [];
+
+export function getInitLog() {
+  return initLog;
+}
+
 async function run(sqlText: string, params?: any[]) {
+  const label = sqlText.replace(/\s+/g, ' ').trim().slice(0, 70);
   try {
     await query(sqlText, params);
-    console.log(`  ✅ ${sqlText.slice(0, 80)}...`);
+    initLog.push(`✅ ${label}`);
     return true;
   } catch (e: any) {
-    console.error(`  ❌ Failed: ${sqlText.slice(0, 80)}... → ${e?.message}`);
+    initLog.push(`❌ ${label} → ${e?.message}`);
+    console.error(`[DB INIT] failed: ${label}`, e?.message);
     return false;
   }
 }
 
 export async function initDatabase() {
+  initLog = [];
   console.log('🔧 [DB INIT] 开始初始化数据库...');
+
 
   // 1. admins 表
   await run(`
