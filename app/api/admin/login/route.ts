@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { verifyCredentials, setSessionCookie, getSessionUsername, clearSessionCookie } from '@/lib/auth';
-import { ensureDbInit } from '@/lib/init';
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -11,9 +10,6 @@ const loginSchema = z.object({
 // POST /api/admin/login - 登录
 export async function POST(req: NextRequest) {
   try {
-    // 先确保数据库表都建好了（幂等，不重复跑）
-    await ensureDbInit();
-
     const body = await req.json();
     const parsed = loginSchema.parse(body);
 
