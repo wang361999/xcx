@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { getUploadSignedUrl, generateR2Key } from '@/lib/r2';
 
 const signSchema = z.object({
@@ -9,7 +9,7 @@ const signSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const body = await req.json();

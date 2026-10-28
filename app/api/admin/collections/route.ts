@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { collections, images } from '@/lib/schema';
 import { asc, eq } from 'drizzle-orm';
@@ -15,7 +15,7 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const result = await db.select().from(collections).orderBy(asc(collections.sortOrder), asc(collections.id));
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const body = await req.json();

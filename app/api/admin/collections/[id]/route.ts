@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { collections, images } from '@/lib/schema';
 import { asc, eq } from 'drizzle-orm';
@@ -16,7 +16,7 @@ const updateSchema = z.object({
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const { id } = await params;
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const { id } = await params;
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const { id } = await params;

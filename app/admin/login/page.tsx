@@ -1,29 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { setAdminToken } from '@/lib/admin-api';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
-  const [token, setToken] = useState('');
+export const dynamic = 'force-dynamic';
+
+function LoginForm() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 从后端获取正确的 token（简单验证）
+    setError('');
+    setLoading(true);
     try {
-      const res = await fetch('/api/admin/stats', {
-        headers: { 'x-admin-token': token },
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password }),
       });
+      const data = await res.json();
       if (res.ok) {
-        setAdminToken(token);
-        router.push('/admin/collections');
+        const redirect = searchParams.get('redirect') || '/admin/collections';
+        router.push(redirect);
       } else {
-        setError('Token 错误');
+        setError(data.error || '登录失败');
       }
     } catch {
       setError('网络错误');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,20 +44,38 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-400 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">图</div>
           <h1 className="text-2xl font-bold text-gray-900">图库管理后台</h1>
-          <p className="text-sm text-gray-500 mt-2">请输入管理员 Token 登录</p>
+          <p className="text-sm text-gray-500 mt-2">请输入管理员账号密码登录</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Admin Token</label>
-            <input type="password" value={token} onChange={e => setToken(e.target.value)}
-              placeholder="在 .env 中配置的 ADMIN_TOKEN"
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+              placeholder="admin" autoComplete="username"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">密码</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••" autoComplete="current-password"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" required />
           </div>
           {error && <div className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</div>}
-          <button type="submit" className="w-full py-2.5 rounded-lg bg-gradient-to-r from-rose-500 to-orange-400 text-white font-medium text-sm hover:shadow-lg hover:shadow-rose-200 transition-all">登录</button>
+          <button type="submit" disabled={loading}
+            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-rose-500 to-orange-400 text-white font-medium text-sm hover:shadow-lg hover:shadow-rose-200 disabled:opacity-60">
+            {loading ? '登录中...' : '登录'}
+          </button>
         </form>
-        <p className="text-xs text-gray-400 text-center mt-6">Token 在项目 .env.local 的 ADMIN_TOKEN 字段中配置</p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-rose-500 via-orange-400 to-amber-300" />
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

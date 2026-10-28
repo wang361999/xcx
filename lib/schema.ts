@@ -1,5 +1,14 @@
 import { pgTable, serial, text, varchar, integer, timestamp, jsonb, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
+// 管理员账号
+export const admins = pgTable('admins', {
+  id: serial('id').primaryKey(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 // 合集
 export const collections = pgTable('collections', {
   id: serial('id').primaryKey(),

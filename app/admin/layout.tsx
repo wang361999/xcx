@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { getAdminToken, clearAdminToken } from '@/lib/admin-api';
+import { useEffect, useState } from 'react';
 
 const menu = [
   { group: '内容管理', items: [
@@ -11,25 +10,29 @@ const menu = [
   ]},
   { group: '配置', items: [
     { icon: '📢', label: '广告设置', href: '/admin/settings' },
+    { icon: '🔐', label: '修改密码', href: '/admin/password' },
   ]},
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [username, setUsername] = useState<string>('');
 
   useEffect(() => {
-    const token = getAdminToken();
-    if (!token && !pathname.includes('/admin/login')) {
-      router.push('/admin/login');
-    }
-    if (token && pathname === '/admin/login') {
-      router.push('/admin/collections');
+    if (pathname !== '/admin/login') {
+      fetch('/api/admin/login', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.loggedIn) router.push('/admin/login');
+          else setUsername(d.username);
+        })
+        .catch(() => router.push('/admin/login'));
     }
   }, [pathname, router]);
 
-  const handleLogout = () => {
-    clearAdminToken();
+  const handleLogout = async () => {
+    await fetch('/api/admin/login', { method: 'DELETE', credentials: 'include' });
     router.push('/admin/login');
   };
 
@@ -45,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="text-base font-semibold text-gray-900">图库管理后台</span>
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-600">
-          <span>👤 Admin</span>
+          <span>👤 {username || 'Admin'}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-rose-500 transition-colors">退出</button>
         </div>
       </div>

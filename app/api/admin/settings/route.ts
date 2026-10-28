@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { settings } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const all = await db.select().from(settings);
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const body = await req.json();

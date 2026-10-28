@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { collections, images, unlocks, adEvents } from '@/lib/schema';
 import { sql } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
-  const authError = requireAdmin(req);
+  const authError = requireAuth(req);
   if (authError) return authError;
   try {
     const [collectionCount] = await db.select({ count: sql<number>`count(*)` }).from(collections);
