@@ -93,3 +93,37 @@
   background: #111827;
   color: #fff;
 }
+
+.netdisk {
+  padding-top: 16rpx;
+}
+
+.nd-title {
+  font-size: 27rpx;
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+
+.nd-tip {
+  font-size: 23rpx;
+  line-height: 1.5;
+  margin-bottom: 16rpx;
+}
+
+.nd-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.nd-row .btn {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  font-size: 28rpx;
+}
+
+.btn.ghost {
+  background: #f3f4f6;
+  color: #111827;
+}
+

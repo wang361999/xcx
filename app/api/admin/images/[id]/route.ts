@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { query } from '@/lib/db';
-import { deleteFile } from '@/lib/r2';
+import { deleteFile } from '@/lib/blob';
 
 const updateSchema = z.object({
   title: z.string().nullable().optional(),
@@ -74,7 +74,7 @@ export async function DELETE(
     );
     const image = imgResult.rows[0];
     await query(`DELETE FROM images WHERE id = $1`, [imageId]);
-    if (image) deleteFile(image.r2_key);
+    if (image) await deleteFile(image.r2_key);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('DELETE /api/admin/images/[id]:', err);

@@ -13,6 +13,8 @@ Page({
     progress: '',
     freeLeft: 0,
     requireUnlock: true,
+    downloadUrl: '',
+    downloadCode: '',
     banners: { bottom: '' },
   },
 
@@ -47,6 +49,8 @@ Page({
         loading: false,
         requireUnlock: download.require_unlock !== false,
         freeLeft: store.freeLeft(download.free_daily_limit),
+        downloadUrl: detail.downloadUrl || '',
+        downloadCode: detail.downloadCode || '',
         banners: { bottom: ad.bannerUnit('banner_collection_bottom') },
       });
       if (detail.title) wx.setNavigationBarTitle({ title: detail.title });
@@ -100,39 +104,31 @@ Page({
         freeLeft: store.freeLeft(download.free_daily_limit),
       });
       wx.showToast({ title: '解锁成功', icon: 'success' });
+      // 解锁后重新拉一次，服务端这时才会下发网盘链接
+      this.load();
     } catch (e) {
       wx.showToast({ title: e.message || '解锁失败', icon: 'none' });
     }
   },
 
-  async onSaveAll() {
-    if (!this.data.unlocked) {
+  async onCopyLink() {
+    if (!this.data.unlocked || !this.data.downloadUrl) {
       wx.showToast({ title: '请先解锁', icon: 'none' });
       return;
     }
-    const images = this.data.detail.images || [];
-    if (!images.length) return;
-
-    this.setData({ saving: true, progress: `0/${images.length}` });
-    let ok = 0;
-
-    for (let i = 0; i < images.length; i += 1) {
-      try {
-        await app.downloadImage(images[i].imageUrl);
-        ok += 1;
-      } catch (e) {
-        // 单张失败继续
-      }
-      this.setData({ progress: `${i + 1}/${images.length}` });
-    }
-
-    this.setData({ saving: false, progress: '' });
-    wx.showModal({
-      title: '保存完成',
-      content: `成功 ${ok} 张，失败 ${images.length - ok} 张`,
-      showCancel: false,
+    wx.setClipboardData({
+      data: this.data.downloadUrl,
+      success: () => wx.showToast({ title: '链接已复制', icon: 'success' }),
     });
-    if (ok > 0) ad.maybeShowSuccessInterstitial();
+  },
+
+  onCopyCode() {
+    const code = this.data.downloadCode;
+    if (!code) return;
+    wx.setClipboardData({
+      data: code,
+      success: () => wx.showToast({ title: '提取码已复制', icon: 'success' }),
+    });
   },
 
   onShareAppMessage() {

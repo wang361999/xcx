@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { query } from '@/lib/db';
-import { deleteFile } from '@/lib/r2';
+import { deleteFile } from '@/lib/blob';
 
 const updateSchema = z.object({
   title: z.string().max(200).optional(),
   description: z.string().nullable().optional(),
   coverUrl: z.string().optional(),
   r2Key: z.string().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  downloadCode: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
   status: z.enum(['published', 'draft']).optional(),
 });
@@ -20,6 +22,8 @@ function mapCollection(c: any) {
     description: c.description,
     coverUrl: c.cover_url,
     r2Key: c.r2_key,
+    downloadUrl: c.download_url,
+    downloadCode: c.download_code,
     sortOrder: c.sort_order,
     status: c.status,
     createdAt: c.created_at,
@@ -90,6 +94,8 @@ export async function PUT(
       description: parsed.description,
       cover_url: parsed.coverUrl,
       r2_key: parsed.r2Key,
+      download_url: parsed.downloadUrl,
+      download_code: parsed.downloadCode,
       sort_order: parsed.sortOrder,
       status: parsed.status,
     };
@@ -135,8 +141,8 @@ export async function DELETE(
     );
 
     await query(`DELETE FROM collections WHERE id = $1`, [collectionId]);
-    if (collection) deleteFile(collection.r2_key);
-    for (const img of imgResult.rows) deleteFile(img.r2_key);
+    if (collection) await deleteFile(collection.r2_key);
+    for (const img of imgResult.rows) await deleteFile(img.r2_key);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('DELETE /api/admin/collections/[id]:', err);

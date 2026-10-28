@@ -112,6 +112,10 @@ export async function initDatabase() {
     )
   `);
 
+  // 6.1 合集下载信息（网盘链接 + 提取码）
+  await run(`ALTER TABLE collections ADD COLUMN IF NOT EXISTS download_url TEXT`);
+  await run(`ALTER TABLE collections ADD COLUMN IF NOT EXISTS download_code VARCHAR(50)`);
+
   // 7. unlocks 表
   await run(`
     CREATE TABLE IF NOT EXISTS unlocks (

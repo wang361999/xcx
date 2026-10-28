@@ -48,6 +48,9 @@ export async function GET(
           copyright: img.copyright,
         })),
         isUnlocked,
+        // 解锁后才下发网盘下载信息
+        downloadUrl: isUnlocked ? collection.download_url : null,
+        downloadCode: isUnlocked ? collection.download_code : null,
       },
     });
   } catch (err) {

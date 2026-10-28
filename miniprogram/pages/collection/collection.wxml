@@ -20,16 +20,23 @@
     <ad unit-id="{{banners.bottom}}" ad-intervals="60"></ad>
   </view>
 
-  <view class="bar">
-    <block wx:if="{{!unlocked}}">
-      <button class="btn primary" bindtap="onUnlock">
-        {{freeLeft > 0 ? '免费解锁（今日剩 ' + freeLeft + ' 次）' : '看广告解锁下载'}}
-      </button>
+  <view class="bar" wx:if="{{!unlocked}}">
+    <button class="btn primary" bindtap="onUnlock">
+      {{freeLeft > 0 ? '免费解锁（今日剩 ' + freeLeft + ' 次）' : '看广告解锁下载'}}
+    </button>
+  </view>
+
+  <view class="bar netdisk" wx:else>
+    <block wx:if="{{downloadUrl}}">
+      <view class="nd-title">原图包下载（百度网盘）</view>
+      <view class="nd-tip muted">复制链接后打开百度网盘 App，再粘贴提取码</view>
+      <view class="nd-row">
+        <button class="btn primary" bindtap="onCopyLink">复制下载链接</button>
+        <button class="btn ghost" wx:if="{{downloadCode}}" bindtap="onCopyCode">提取码 {{downloadCode}}</button>
+      </view>
     </block>
     <block wx:else>
-      <button class="btn primary" bindtap="onSaveAll" loading="{{saving}}">
-        {{saving ? '保存中 ' + progress : '保存全部到相册'}}
-      </button>
+      <view class="nd-tip muted">该合集暂未配置网盘链接，可先保存预览图</view>
     </block>
   </view>
 </view>

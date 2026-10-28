@@ -55,11 +55,10 @@ cat > "$ENV_FILE" <<'EOF'
 # Vercel Postgres
 POSTGRES_URL=postgres://user:password@host:port/dbname
 
-# Cloudflare R2
-R2_ACCESS_KEY_ID=your-r2-access-key-id
-R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
-R2_BUCKET=gallery-images
-R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+# Vercel Blob（在 Vercel 控制台 Storage → Blob 创建后自动注入 BLOB_READ_WRITE_TOKEN）
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
+BLOB_PUBLIC_ORIGIN=https://xxxxxxxx.public.blob.vercel-storage.com
+NEXT_PUBLIC_IMG_BASE=https://xcx.gitd.cn/img
 
 # 微信小程序 (可选)
 WECHAT_APPID=

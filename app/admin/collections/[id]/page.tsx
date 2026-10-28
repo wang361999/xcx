@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { upload } from '@vercel/blob/client';
 import { adminFetch } from '@/lib/admin-api';
 
 interface ImageItem {
@@ -20,6 +21,7 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
   const [data, setData] = useState({
     id: undefined as number | undefined,
     title: '', description: '', coverUrl: '', r2Key: '',
+    downloadUrl: '', downloadCode: '',
     sortOrder: 0, status: 'draft' as 'published' | 'draft',
     images: [] as ImageItem[],
   });
@@ -36,7 +38,9 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
           setData({
             id: res.data.id, title: res.data.title,
             description: res.data.description || '', coverUrl: res.data.coverUrl,
-            r2Key: res.data.r2Key, sortOrder: res.data.sortOrder || 0,
+            r2Key: res.data.r2Key,
+            downloadUrl: res.data.downloadUrl || '', downloadCode: res.data.downloadCode || '',
+            sortOrder: res.data.sortOrder || 0,
             status: res.data.status, images: res.data.images || [],
           });
         } catch { router.push('/admin/collections'); }
@@ -45,20 +49,25 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
     p();
   }, [params, router]);
 
-  const uploadFileToR2 = async (file: File) => {
-    const signRes = await adminFetch('/api/admin/upload/sign', {
-      method: 'POST',
-      body: JSON.stringify({ fileName: file.name, contentType: file.type }),
+  const uploadFile = async (file: File) => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const d = new Date();
+    const pathname = `collections/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+    const blob = await upload(pathname, file, {
+      access: 'public',
+      handleUploadUrl: '/api/admin/upload/sign',
+      multipart: true,
     });
-    const { uploadUrl, publicUrl, r2Key } = signRes.data;
-    await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-    return { publicUrl, r2Key };
+    return {
+      publicUrl: `${window.location.origin}/img/${blob.pathname}`,
+      r2Key: blob.pathname,
+    };
   };
 
   const handleCoverUpload = async (file: File) => {
     try {
       setUploading(true);
-      const { publicUrl, r2Key } = await uploadFileToR2(file);
+      const { publicUrl, r2Key } = await uploadFile(file);
       setData(prev => ({ ...prev, coverUrl: publicUrl, r2Key }));
     } catch (err: any) { alert('封面上传失败: ' + err.message); }
     finally { setUploading(false); }
@@ -73,7 +82,7 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
     for (let i = 0; i < files.length; i++) {
       try {
         const file = files[i];
-        const { publicUrl, r2Key } = await uploadFileToR2(file);
+        const { publicUrl, r2Key } = await uploadFile(file);
         newImages.push({
           imageUrl: publicUrl, r2Key,
           title: file.name.replace(/\.[^/.]+$/, ''),
@@ -162,6 +171,18 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 resize-none" />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">网盘下载链接</label>
+                <input type="text" value={data.downloadUrl} onChange={e => setData({ ...data, downloadUrl: e.target.value })}
+                  placeholder="百度网盘分享链接，用户解锁后才可见"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">网盘提取码</label>
+                <input type="text" value={data.downloadCode} onChange={e => setData({ ...data, downloadCode: e.target.value })}
+                  placeholder="如 1234（没有可留空）"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100" />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">封面图 <span className="text-red-500">*</span></label>
                 <label className="block cursor-pointer">
                   <input type="file" accept="image/*" onChange={e => e.target.files && handleCoverUpload(e.target.files[0])} className="hidden" />
@@ -174,7 +195,7 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
                     <div className="h-44 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-rose-400 hover:text-rose-400">
                       <div className="text-3xl mb-2">🖼️</div>
                       <div className="text-sm">点击上传封面图</div>
-                      <div className="text-xs mt-1">图片直传到 Cloudflare R2</div>
+                      <div className="text-xs mt-1">图片直传到 Vercel Blob</div>
                     </div>
                   )}
                 </label>

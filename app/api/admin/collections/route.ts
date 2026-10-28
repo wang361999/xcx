@@ -8,6 +8,8 @@ const createSchema = z.object({
   description: z.string().optional().nullable(),
   coverUrl: z.string().min(1),
   r2Key: z.string().min(1),
+  downloadUrl: z.string().optional().nullable(),
+  downloadCode: z.string().optional().nullable(),
   sortOrder: z.number().int().optional(),
   status: z.enum(['published', 'draft']).optional(),
 });
@@ -19,6 +21,8 @@ function mapCollection(c: any) {
     description: c.description,
     coverUrl: c.cover_url,
     r2Key: c.r2_key,
+    downloadUrl: c.download_url,
+    downloadCode: c.download_code,
     sortOrder: c.sort_order,
     status: c.status,
     createdAt: c.created_at,
@@ -60,14 +64,16 @@ export async function POST(req: NextRequest) {
     const sortOrder = parsed.sortOrder ?? 0;
     const status = parsed.status ?? 'published';
     const result = await query(
-      `INSERT INTO collections (title, description, cover_url, r2_key, sort_order, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO collections (title, description, cover_url, r2_key, download_url, download_code, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         parsed.title,
         parsed.description ?? null,
         parsed.coverUrl,
         parsed.r2Key,
+        parsed.downloadUrl ?? null,
+        parsed.downloadCode ?? null,
         sortOrder,
         status,
       ]
