@@ -1,65 +1,32 @@
 /**
- * 数据库连接 - 用 pg 原生驱动，支持连接超时
+ * 数据库连接 - Neon serverless driver (Vercel Postgres 已迁移到 Neon)
+ * 专门为 Serverless/Edge 环境设计
+ * 返回值包装成 pg/postgres 标准格式 { rows: [...] }
  */
-import { Client } from 'pg';
+import { neon } from '@neondatabase/serverless';
 
-let client: Client | null = null;
-let connecting = false;
-let connectPromise: Promise<Client> | null = null;
+let sql: any = null;
 
-function getConnectionString(): string | null {
-  return process.env.POSTGRES_URL 
+function getSql() {
+  if (sql) return sql;
+  
+  const connectionString = process.env.POSTGRES_URL 
     || process.env.POSTGRES_PRISMA_URL 
-    || process.env.DATABASE_URL 
-    || null;
-}
-
-async function getClient(): Promise<Client> {
-  if (client && client.readyForQuery) return client;
-  if (connecting && connectPromise) return connectPromise;
-
-  const connectionString = getConnectionString();
+    || process.env.DATABASE_URL;
+  
   if (!connectionString) {
-    throw new Error('No Postgres connection string found');
+    throw new Error('No Postgres connection string found. Set POSTGRES_URL env var.');
   }
-
-  connecting = true;
-  connectPromise = new Promise<Client>((resolve, reject) => {
-    const c = new Client({
-      connectionString,
-      connectionTimeoutMillis: 5000, // 5秒超时
-      query_timeout: 10000,
-    });
-    
-    c.connect((err) => {
-      connecting = false;
-      if (err) {
-        console.error('[DB] connect failed:', err.message);
-        client = null;
-        connectPromise = null;
-        reject(err);
-        return;
-      }
-      console.log('[DB] connected');
-      client = c;
-      resolve(c);
-    });
-  });
-
-  try {
-    const c = await connectPromise;
-    connectPromise = null;
-    return c;
-  } catch (e) {
-    connectPromise = null;
-    throw e;
-  }
+  
+  sql = neon(connectionString);
+  return sql;
 }
 
-// 通用查询方法
+// 通用查询方法，包装成 { rows: [...] } 格式
 export async function query(sqlText: string, params?: any[]) {
-  const c = await getClient();
-  return c.query(sqlText, params);
+  const s = getSql();
+  const rows = await s(sqlText, params);
+  return { rows, rowCount: rows.length };
 }
 
 // 测试连接
