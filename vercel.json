@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "regions": ["sin1"],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
