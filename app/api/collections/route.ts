@@ -1,38 +1,29 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { collections, images } from '@/lib/schema';
-import { asc, eq, sql } from 'drizzle-orm';
+import { sql } from '@/lib/db';
 
 export async function GET() {
   try {
-    const result = await db
-      .select({
-        id: collections.id,
-        title: collections.title,
-        description: collections.description,
-        coverUrl: collections.coverUrl,
-        sortOrder: collections.sortOrder,
-      })
-      .from(collections)
-      .where(eq(collections.status, 'published'))
-      .orderBy(asc(collections.sortOrder), asc(collections.id));
+    const result = await sql.query(
+      `SELECT id, title, description, cover_url, sort_order
+       FROM collections
+       WHERE status = 'published'
+       ORDER BY sort_order ASC, id ASC`
+    );
 
-    const imageCounts = await db
-      .select({
-        collectionId: images.collectionId,
-        count: sql<number>`count(*)` as any,
-      })
-      .from(images)
-      .groupBy(images.collectionId);
+    const imageCounts = await sql.query(
+      `SELECT collection_id, count(*) as cnt FROM images GROUP BY collection_id`
+    );
 
-    const countMap = new Map(imageCounts.map(r => [r.collectionId, Number(r.count)]));
+    const countMap = new Map(
+      imageCounts.rows.map((r: any) => [r.collection_id, Number(r.cnt)])
+    );
 
-    const list = result.map(row => ({
+    const list = result.rows.map((row: any) => ({
       id: row.id,
       title: row.title,
       description: row.description,
-      coverUrl: row.coverUrl,
-      sortOrder: row.sortOrder,
+      coverUrl: row.cover_url,
+      sortOrder: row.sort_order,
       imageCount: countMap.get(row.id) || 0,
     }));
 

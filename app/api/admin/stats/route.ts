@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { collections, images, unlocks, adEvents } from '@/lib/schema';
-import { sql } from 'drizzle-orm';
+import { sql } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const authError = requireAuth(req);
   if (authError) return authError;
   try {
-    const [collectionCount] = await db.select({ count: sql<number>`count(*)` }).from(collections);
-    const [publishedCount] = await db.select({ count: sql<number>`count(*)` }).from(collections).where(sql`status = 'published'`);
-    const [imageCount] = await db.select({ count: sql<number>`count(*)` }).from(images);
-    const [unlockCount] = await db.select({ count: sql<number>`count(*)` }).from(unlocks);
-    const [adRewardCount] = await db.select({ count: sql<number>`count(*)` }).from(adEvents).where(sql`ad_type = 'reward'`);
+    const colCount = await sql.query(`SELECT count(*) as cnt FROM collections`);
+    const pubCount = await sql.query(
+      `SELECT count(*) as cnt FROM collections WHERE status = 'published'`
+    );
+    const imgCount = await sql.query(`SELECT count(*) as cnt FROM images`);
+    const unlockCount = await sql.query(`SELECT count(*) as cnt FROM unlocks`);
+    const rewardCount = await sql.query(
+      `SELECT count(*) as cnt FROM ad_events WHERE ad_type = 'reward'`
+    );
 
     return NextResponse.json({
       data: {
-        collections: { total: Number(collectionCount.count), published: Number(publishedCount.count) },
-        images: { total: Number(imageCount.count) },
-        unlocks: { total: Number(unlockCount.count) },
-        ads: { rewardTotal: Number(adRewardCount.count) },
+        collections: {
+          total: Number(colCount.rows[0].cnt),
+          published: Number(pubCount.rows[0].cnt),
+        },
+        images: { total: Number(imgCount.rows[0].cnt) },
+        unlocks: { total: Number(unlockCount.rows[0].cnt) },
+        ads: { rewardTotal: Number(rewardCount.rows[0].cnt) },
       },
     });
   } catch (err) {

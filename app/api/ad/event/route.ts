@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
-import { db } from '@/lib/db';
-import { adEvents } from '@/lib/schema';
+import { sql } from '@/lib/db';
 
 const eventSchema = z.object({
   openid: z.string().optional(),
@@ -15,16 +14,21 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = eventSchema.parse(body);
-    await db.insert(adEvents).values({
-      openid: parsed.openid,
-      adType: parsed.adType,
-      adUnitId: parsed.adUnitId,
-      action: parsed.action,
-      durationMs: parsed.durationMs,
-    });
+    await sql.query(
+      `INSERT INTO ad_events (openid, ad_type, ad_unit_id, action, duration_ms)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        parsed.openid ?? null,
+        parsed.adType,
+        parsed.adUnitId ?? null,
+        parsed.action,
+        parsed.durationMs ?? null,
+      ]
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
-    if (err instanceof ZodError) return NextResponse.json({ error: err.issues }, { status: 400 });
+    if (err instanceof ZodError)
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     return NextResponse.json({ ok: true }); // 埋点不阻塞主流程
   }
 }

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { unlocks, collections } from '@/lib/schema';
-import { eq, and } from 'drizzle-orm';
+import { sql } from '@/lib/db';
 import { ZodError, z } from 'zod';
 
 const unlockSchema = z.object({
@@ -14,20 +12,28 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = unlockSchema.parse(body);
 
-    const [collection] = await db.select().from(collections).where(eq(collections.id, parsed.collectionId)).limit(1);
-    if (!collection) return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+    const colResult = await sql.query(
+      `SELECT id FROM collections WHERE id = $1 LIMIT 1`,
+      [parsed.collectionId]
+    );
+    if (!colResult.rows[0])
+      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
 
-    const [existing] = await db
-      .select()
-      .from(unlocks)
-      .where(and(eq(unlocks.openid, parsed.openid), eq(unlocks.collectionId, parsed.collectionId)))
-      .limit(1);
-    if (existing) return NextResponse.json({ data: { unlocked: true, already: true } });
+    const existingResult = await sql.query(
+      `SELECT id FROM unlocks WHERE openid = $1 AND collection_id = $2 LIMIT 1`,
+      [parsed.openid, parsed.collectionId]
+    );
+    if (existingResult.rows[0])
+      return NextResponse.json({ data: { unlocked: true, already: true } });
 
-    await db.insert(unlocks).values({ openid: parsed.openid, collectionId: parsed.collectionId });
+    await sql.query(
+      `INSERT INTO unlocks (openid, collection_id) VALUES ($1, $2)`,
+      [parsed.openid, parsed.collectionId]
+    );
     return NextResponse.json({ data: { unlocked: true } });
   } catch (err) {
-    if (err instanceof ZodError) return NextResponse.json({ error: err.issues }, { status: 400 });
+    if (err instanceof ZodError)
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     console.error('POST /api/unlock:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
@@ -37,14 +43,19 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const openid = url.searchParams.get('openid');
-    if (!openid) return NextResponse.json({ error: 'openid required' }, { status: 400 });
+    if (!openid)
+      return NextResponse.json({ error: 'openid required' }, { status: 400 });
 
-    const list = await db
-      .select({ collectionId: unlocks.collectionId })
-      .from(unlocks)
-      .where(eq(unlocks.openid, openid));
+    const result = await sql.query(
+      `SELECT collection_id FROM unlocks WHERE openid = $1`,
+      [openid]
+    );
 
-    return NextResponse.json({ data: { unlockedCollectionIds: list.map(r => r.collectionId) } });
+    return NextResponse.json({
+      data: {
+        unlockedCollectionIds: result.rows.map((r: any) => r.collection_id),
+      },
+    });
   } catch (err) {
     console.error('GET /api/unlock:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

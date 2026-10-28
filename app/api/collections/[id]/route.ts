@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { collections, images, unlocks } from '@/lib/schema';
-import { asc, eq, and } from 'drizzle-orm';
+import { sql } from '@/lib/db';
 
 export async function GET(
   req: Request,
@@ -10,31 +8,31 @@ export async function GET(
   try {
     const { id } = await params;
     const collectionId = parseInt(id);
-    if (isNaN(collectionId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    if (isNaN(collectionId))
+      return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
 
-    const [collection] = await db
-      .select()
-      .from(collections)
-      .where(and(eq(collections.id, collectionId), eq(collections.status, 'published')))
-      .limit(1);
-    if (!collection) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const colResult = await sql.query(
+      `SELECT * FROM collections WHERE id = $1 AND status = 'published' LIMIT 1`,
+      [collectionId]
+    );
+    const collection = colResult.rows[0];
+    if (!collection)
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const imageList = await db
-      .select()
-      .from(images)
-      .where(eq(images.collectionId, collectionId))
-      .orderBy(asc(images.sortOrder), asc(images.id));
+    const imgResult = await sql.query(
+      `SELECT * FROM images WHERE collection_id = $1 ORDER BY sort_order ASC, id ASC`,
+      [collectionId]
+    );
 
     const url = new URL(req.url);
     const openid = url.searchParams.get('openid');
     let isUnlocked = false;
     if (openid) {
-      const [unlock] = await db
-        .select()
-        .from(unlocks)
-        .where(and(eq(unlocks.openid, openid), eq(unlocks.collectionId, collectionId)))
-        .limit(1);
-      isUnlocked = !!unlock;
+      const unlockResult = await sql.query(
+        `SELECT id FROM unlocks WHERE openid = $1 AND collection_id = $2 LIMIT 1`,
+        [openid, collectionId]
+      );
+      isUnlocked = unlockResult.rows.length > 0;
     }
 
     return NextResponse.json({
@@ -42,11 +40,11 @@ export async function GET(
         id: collection.id,
         title: collection.title,
         description: collection.description,
-        coverUrl: collection.coverUrl,
-        images: imageList.map(img => ({
+        coverUrl: collection.cover_url,
+        images: imgResult.rows.map((img: any) => ({
           id: img.id,
           title: img.title,
-          imageUrl: img.imageUrl,
+          imageUrl: img.image_url,
           copyright: img.copyright,
         })),
         isUnlocked,

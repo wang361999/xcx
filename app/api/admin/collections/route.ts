@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { collections, images } from '@/lib/schema';
-import { asc, eq } from 'drizzle-orm';
+import { sql } from '@/lib/db';
 
 const createSchema = z.object({
   title: z.string().min(1).max(200),
@@ -14,17 +12,39 @@ const createSchema = z.object({
   status: z.enum(['published', 'draft']).optional(),
 });
 
+function mapCollection(c: any) {
+  return {
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    coverUrl: c.cover_url,
+    r2Key: c.r2_key,
+    sortOrder: c.sort_order,
+    status: c.status,
+    createdAt: c.created_at,
+    updatedAt: c.updated_at,
+  };
+}
+
 export async function GET(req: NextRequest) {
   const authError = requireAuth(req);
   if (authError) return authError;
   try {
-    const result = await db.select().from(collections).orderBy(asc(collections.sortOrder), asc(collections.id));
-    const counts = await db
-      .select({ collectionId: images.collectionId, count: images.id })
-      .from(images)
-      .groupBy(images.collectionId);
-    const countMap = new Map(counts.map(r => [r.collectionId, (r.count as unknown as number)]));
-    return NextResponse.json({ data: result.map(c => ({ ...c, imageCount: countMap.get(c.id) || 0 })) });
+    const result = await sql.query(
+      `SELECT * FROM collections ORDER BY sort_order ASC, id ASC`
+    );
+    const counts = await sql.query(
+      `SELECT collection_id, count(*) as cnt FROM images GROUP BY collection_id`
+    );
+    const countMap = new Map(
+      counts.rows.map((r: any) => [r.collection_id, Number(r.cnt)])
+    );
+    return NextResponse.json({
+      data: result.rows.map((c: any) => ({
+        ...mapCollection(c),
+        imageCount: countMap.get(c.id) || 0,
+      })),
+    });
   } catch (err) {
     console.error('GET /api/admin/collections:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
@@ -37,17 +57,26 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = createSchema.parse(body);
-    const [created] = await db.insert(collections).values({
-      title: parsed.title,
-      description: parsed.description,
-      coverUrl: parsed.coverUrl,
-      r2Key: parsed.r2Key,
-      sortOrder: parsed.sortOrder ?? 0,
-      status: parsed.status ?? 'published',
-    }).returning();
-    return NextResponse.json({ data: created });
+    const sortOrder = parsed.sortOrder ?? 0;
+    const status = parsed.status ?? 'published';
+    const result = await sql.query(
+      `INSERT INTO collections (title, description, cover_url, r2_key, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        parsed.title,
+        parsed.description ?? null,
+        parsed.coverUrl,
+        parsed.r2Key,
+        sortOrder,
+        status,
+      ]
+    );
+    const c = result.rows[0];
+    return NextResponse.json({ data: c ? mapCollection(c) : null });
   } catch (err) {
-    if (err instanceof ZodError) return NextResponse.json({ error: err.issues }, { status: 400 });
+    if (err instanceof ZodError)
+      return NextResponse.json({ error: err.issues }, { status: 400 });
     console.error('POST /api/admin/collections:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
