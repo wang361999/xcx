@@ -44,8 +44,8 @@ export async function GET() {
       return NextResponse.json({ 
         ok: true, 
         url: maskedUrl,
-        tables: tables.rows.map((t: any) => t.tablename),
-        tableCount: tables.rows.length
+        tables: tables.map((t: any) => t.tablename),
+        tableCount: tables.length
       });
     } catch (e: any) {
       return NextResponse.json({ 
