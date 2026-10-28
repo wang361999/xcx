@@ -1,7 +1,7 @@
 /**
  * 全局配置
- * 部署好自己的后端域名后，把 BASE_URL 改成你的域名（必须 HTTPS）
+ * BASE_URL 必须是微信后台「request 合法域名」里已配置的域名（需 ICP 备案）
  */
 module.exports = {
-  BASE_URL: 'https://xcx.gitd.cn',
+  BASE_URL: 'https://tuku.wangdechuang.cn',
 };
