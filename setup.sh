@@ -55,10 +55,8 @@ cat > "$ENV_FILE" <<'EOF'
 # Vercel Postgres
 POSTGRES_URL=postgres://user:password@host:port/dbname
 
-# Vercel Blob（在 Vercel 控制台 Storage → Blob 创建后自动注入 BLOB_READ_WRITE_TOKEN）
+# Vercel Blob（在 Vercel 控制台 Storage → Blob 创建后自动注入）
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
-BLOB_PUBLIC_ORIGIN=https://xxxxxxxx.public.blob.vercel-storage.com
-NEXT_PUBLIC_IMG_BASE=https://xcx.gitd.cn/img
 
 # 微信小程序 (可选)
 WECHAT_APPID=
