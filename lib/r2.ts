@@ -15,6 +15,18 @@ export const r2Client = new S3Client({
   },
 });
 
+// 图片对外访问的基础地址
+// R2_PUBLIC_BASE 例：https://xcx.gitd.cn/img（由 next.config 反代到 R2 公共域名）
+export function getPublicBase(): string {
+  const base = (process.env.R2_PUBLIC_BASE || '').replace(/\/+$/, '');
+  if (base) return base;
+  // 兜底：R2 公共域名（需在 Cloudflare 开启 Public Development URL）
+  const origin = (process.env.R2_PUBLIC_ORIGIN || '').replace(/\/+$/, '');
+  if (origin) return origin;
+  return `${R2_ENDPOINT}/${R2_BUCKET}`;
+}
+
+
 // 生成唯一的 R2 key
 export function generateR2Key(prefix: string = 'images', ext: string = 'jpg'): string {
   const date = new Date();
@@ -33,9 +45,8 @@ export async function getUploadSignedUrl(key: string, contentType: string = 'ima
   });
 
   const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn });
-  // 如果 R2 Bucket 开了公共访问，直接用这个 URL 就能访问
-  // 如果没有，需要单独的公共 URL 或者用预签名下载 URL
-  const publicUrl = `${R2_ENDPOINT.replace('.r2.cloudflarestorage.com', '.r2.dev')}/${R2_BUCKET}/${key}`;
+  // 公开访问地址：优先用自己的域名（经 Vercel 反代到 R2），否则退回 R2 公共域名
+  const publicUrl = `${getPublicBase()}/${key}`;
 
   return { uploadUrl, publicUrl, key };
 }
