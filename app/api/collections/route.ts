@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    const result = await sql.query(
+    const result = await query(
       `SELECT id, title, description, cover_url, sort_order
        FROM collections
        WHERE status = 'published'
        ORDER BY sort_order ASC, id ASC`
     );
 
-    const imageCounts = await sql.query(
+    const imageCounts = await query(
       `SELECT collection_id, count(*) as cnt FROM images GROUP BY collection_id`
     );
 

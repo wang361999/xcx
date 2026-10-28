@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 const eventSchema = z.object({
   openid: z.string().optional(),
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = eventSchema.parse(body);
-    await sql.query(
+    await query(
       `INSERT INTO ad_events (openid, ad_type, ad_unit_id, action, duration_ms)
        VALUES ($1, $2, $3, $4, $5)`,
       [

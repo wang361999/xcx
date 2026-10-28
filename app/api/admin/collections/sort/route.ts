@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 const sortSchema = z.array(
   z.object({ id: z.number().int(), sortOrder: z.number().int() })
@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest) {
   try {
     const parsed = sortSchema.parse(await req.json());
     for (const item of parsed) {
-      await sql.query(
+      await query(
         `UPDATE collections SET sort_order = $1 WHERE id = $2`,
         [item.sortOrder, item.id]
       );

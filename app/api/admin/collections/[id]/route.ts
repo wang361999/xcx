@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 import { deleteFile } from '@/lib/r2';
 
 const updateSchema = z.object({
@@ -49,7 +49,7 @@ export async function GET(
   try {
     const { id } = await params;
     const collectionId = parseInt(id);
-    const colResult = await sql.query(
+    const colResult = await query(
       `SELECT * FROM collections WHERE id = $1 LIMIT 1`,
       [collectionId]
     );
@@ -57,7 +57,7 @@ export async function GET(
     if (!collection)
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const imgResult = await sql.query(
+    const imgResult = await query(
       `SELECT * FROM images WHERE collection_id = $1 ORDER BY sort_order ASC, id ASC`,
       [collectionId]
     );
@@ -99,7 +99,7 @@ export async function PUT(
     const sets = fields.map(([col], i) => `${col} = $${i + 1}`).join(', ');
     const values = fields.map(([, v]) => v);
     values.push(new Date(), collectionId);
-    const result = await sql.query(
+    const result = await query(
       `UPDATE collections SET ${sets}, updated_at = $${fields.length + 1}
        WHERE id = $${fields.length + 2} RETURNING *`,
       values
@@ -124,17 +124,17 @@ export async function DELETE(
     const { id } = await params;
     const collectionId = parseInt(id);
 
-    const colResult = await sql.query(
+    const colResult = await query(
       `SELECT * FROM collections WHERE id = $1 LIMIT 1`,
       [collectionId]
     );
     const collection = colResult.rows[0];
-    const imgResult = await sql.query(
+    const imgResult = await query(
       `SELECT * FROM images WHERE collection_id = $1`,
       [collectionId]
     );
 
-    await sql.query(`DELETE FROM collections WHERE id = $1`, [collectionId]);
+    await query(`DELETE FROM collections WHERE id = $1`, [collectionId]);
     if (collection) deleteFile(collection.r2_key);
     for (const img of imgResult.rows) deleteFile(img.r2_key);
     return NextResponse.json({ ok: true });

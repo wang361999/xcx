@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 import { ZodError, z } from 'zod';
 
 const unlockSchema = z.object({
@@ -12,21 +12,21 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = unlockSchema.parse(body);
 
-    const colResult = await sql.query(
+    const colResult = await query(
       `SELECT id FROM collections WHERE id = $1 LIMIT 1`,
       [parsed.collectionId]
     );
     if (!colResult.rows[0])
       return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
 
-    const existingResult = await sql.query(
+    const existingResult = await query(
       `SELECT id FROM unlocks WHERE openid = $1 AND collection_id = $2 LIMIT 1`,
       [parsed.openid, parsed.collectionId]
     );
     if (existingResult.rows[0])
       return NextResponse.json({ data: { unlocked: true, already: true } });
 
-    await sql.query(
+    await query(
       `INSERT INTO unlocks (openid, collection_id) VALUES ($1, $2)`,
       [parsed.openid, parsed.collectionId]
     );
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     if (!openid)
       return NextResponse.json({ error: 'openid required' }, { status: 400 });
 
-    const result = await sql.query(
+    const result = await query(
       `SELECT collection_id FROM unlocks WHERE openid = $1`,
       [openid]
     );

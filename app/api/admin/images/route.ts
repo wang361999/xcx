@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 const createSchema = z.object({
   collectionId: z.number().int(),
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     });
 
-    const result = await sql.query(
+    const result = await query(
       `INSERT INTO images (collection_id, title, image_url, r2_key, copyright, sort_order)
        VALUES ${placeholders.join(', ')}
        RETURNING *`,

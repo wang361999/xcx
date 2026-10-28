@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET(
   req: Request,
@@ -11,7 +11,7 @@ export async function GET(
     if (isNaN(collectionId))
       return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
 
-    const colResult = await sql.query(
+    const colResult = await query(
       `SELECT * FROM collections WHERE id = $1 AND status = 'published' LIMIT 1`,
       [collectionId]
     );
@@ -19,7 +19,7 @@ export async function GET(
     if (!collection)
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const imgResult = await sql.query(
+    const imgResult = await query(
       `SELECT * FROM images WHERE collection_id = $1 ORDER BY sort_order ASC, id ASC`,
       [collectionId]
     );
@@ -28,7 +28,7 @@ export async function GET(
     const openid = url.searchParams.get('openid');
     let isUnlocked = false;
     if (openid) {
-      const unlockResult = await sql.query(
+      const unlockResult = await query(
         `SELECT id FROM unlocks WHERE openid = $1 AND collection_id = $2 LIMIT 1`,
         [openid, collectionId]
       );

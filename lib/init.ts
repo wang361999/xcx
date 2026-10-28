@@ -3,7 +3,7 @@
  * 应用启动时自动检测并创建缺失的表 + 插入默认数据
  * 用户无需手动执行任何 SQL
  */
-import { sql as vercelSql } from '@vercel/postgres';
+import { query } from './db';
 import bcrypt from 'bcryptjs';
 
 // 默认密码的 bcrypt hash ("admin")
@@ -11,7 +11,7 @@ const DEFAULT_PASSWORD_HASH = bcrypt.hashSync('admin', 10);
 
 async function run(sqlText: string, params?: any[]) {
   try {
-    await vercelSql.query(sqlText, params);
+    await query(sqlText, params);
     console.log(`  ✅ ${sqlText.slice(0, 80)}...`);
     return true;
   } catch (e: any) {

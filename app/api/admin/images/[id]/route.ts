@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 import { deleteFile } from '@/lib/r2';
 
 const updateSchema = z.object({
@@ -46,7 +46,7 @@ export async function PUT(
     const sets = fields.map(([col], i) => `${col} = $${i + 1}`).join(', ');
     const values = fields.map(([, v]) => v);
     values.push(imageId);
-    const result = await sql.query(
+    const result = await query(
       `UPDATE images SET ${sets} WHERE id = $${fields.length + 1} RETURNING *`,
       values
     );
@@ -68,12 +68,12 @@ export async function DELETE(
   try {
     const { id } = await params;
     const imageId = parseInt(id);
-    const imgResult = await sql.query(
+    const imgResult = await query(
       `SELECT * FROM images WHERE id = $1`,
       [imageId]
     );
     const image = imgResult.rows[0];
-    await sql.query(`DELETE FROM images WHERE id = $1`, [imageId]);
+    await query(`DELETE FROM images WHERE id = $1`, [imageId]);
     if (image) deleteFile(image.r2_key);
     return NextResponse.json({ ok: true });
   } catch (err) {

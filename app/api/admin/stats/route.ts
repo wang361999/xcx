@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const authError = requireAuth(req);
   if (authError) return authError;
   try {
-    const colCount = await sql.query(`SELECT count(*) as cnt FROM collections`);
-    const pubCount = await sql.query(
+    const colCount = await query(`SELECT count(*) as cnt FROM collections`);
+    const pubCount = await query(
       `SELECT count(*) as cnt FROM collections WHERE status = 'published'`
     );
-    const imgCount = await sql.query(`SELECT count(*) as cnt FROM images`);
-    const unlockCount = await sql.query(`SELECT count(*) as cnt FROM unlocks`);
-    const rewardCount = await sql.query(
+    const imgCount = await query(`SELECT count(*) as cnt FROM images`);
+    const unlockCount = await query(`SELECT count(*) as cnt FROM unlocks`);
+    const rewardCount = await query(
       `SELECT count(*) as cnt FROM ad_events WHERE ad_type = 'reward'`
     );
 

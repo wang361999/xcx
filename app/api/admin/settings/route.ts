@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const authError = requireAuth(req);
   if (authError) return authError;
   try {
-    const result = await sql.query(`SELECT key, value FROM settings`);
+    const result = await query(`SELECT key, value FROM settings`);
     const settings: Record<string, any> = {};
     for (const s of result.rows) settings[s.key] = s.value;
     return NextResponse.json({ data: settings });
@@ -22,7 +22,7 @@ export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
     for (const [key, value] of Object.entries(body)) {
-      await sql.query(
+      await query(
         `INSERT INTO settings (key, value)
          VALUES ($1, $2::jsonb)
          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,

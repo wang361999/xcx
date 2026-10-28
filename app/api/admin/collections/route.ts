@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError, z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 const createSchema = z.object({
   title: z.string().min(1).max(200),
@@ -30,10 +30,10 @@ export async function GET(req: NextRequest) {
   const authError = requireAuth(req);
   if (authError) return authError;
   try {
-    const result = await sql.query(
+    const result = await query(
       `SELECT * FROM collections ORDER BY sort_order ASC, id ASC`
     );
-    const counts = await sql.query(
+    const counts = await query(
       `SELECT collection_id, count(*) as cnt FROM images GROUP BY collection_id`
     );
     const countMap = new Map(
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     const parsed = createSchema.parse(body);
     const sortOrder = parsed.sortOrder ?? 0;
     const status = parsed.status ?? 'published';
-    const result = await sql.query(
+    const result = await query(
       `INSERT INTO collections (title, description, cover_url, r2_key, sort_order, status)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,

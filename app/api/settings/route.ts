@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    const result = await sql.query(`SELECT key, value FROM settings`);
+    const result = await query(`SELECT key, value FROM settings`);
     const settings: Record<string, any> = {};
     for (const s of result.rows) settings[s.key] = s.value;
     return NextResponse.json({ data: settings });
