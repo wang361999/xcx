@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="top">
+    <view class="title">{{detail.title}}</view>
+    <view class="desc muted" wx:if="{{detail.description}}">{{detail.description}}</view>
+    <view class="stat muted">{{detail.images.length}} 张图片</view>
+  </view>
+
+  <view class="grid">
+    <view class="cell" wx:for="{{detail.images}}" wx:key="id" bindtap="onPreview" data-index="{{index}}">
+      <image class="img" src="{{item.imageUrl}}" mode="aspectFill" lazy-load></image>
+      <view class="lock" wx:if="{{!unlocked}}">
+        <text class="lock-icon">🔒</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && detail.images.length === 0}}">该合集暂无图片</view>
+
+  <view class="ad-wrap" wx:if="{{banners.bottom}}">
+    <ad unit-id="{{banners.bottom}}" ad-intervals="60"></ad>
+  </view>
+
+  <view class="bar">
+    <block wx:if="{{!unlocked}}">
+      <button class="btn primary" bindtap="onUnlock">
+        {{freeLeft > 0 ? '免费解锁（今日剩 ' + freeLeft + ' 次）' : '看广告解锁下载'}}
+      </button>
+    </block>
+    <block wx:else>
+      <button class="btn primary" bindtap="onSaveAll" loading="{{saving}}">
+        {{saving ? '保存中 ' + progress : '保存全部到相册'}}
+      </button>
+    </block>
+  </view>
+</view>

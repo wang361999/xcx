@@ -1,0 +1,17 @@
+<view class="wrap">
+  <swiper class="swiper" current="{{current}}" bindchange="onSwiperChange" circular>
+    <swiper-item wx:for="{{images}}" wx:key="id">
+      <image class="full" src="{{item.imageUrl}}" mode="aspectFit"></image>
+    </swiper-item>
+  </swiper>
+
+  <view class="counter">{{current + 1}} / {{images.length}}</view>
+
+  <view class="ad-wrap" wx:if="{{banner}}">
+    <ad unit-id="{{banner}}" ad-intervals="60"></ad>
+  </view>
+
+  <view class="bar">
+    <button class="btn" bindtap="onSave">{{unlocked ? '保存这张到相册' : '解锁后可保存'}}</button>
+  </view>
+</view>

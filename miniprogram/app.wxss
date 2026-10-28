@@ -1,0 +1,29 @@
+page {
+  background: #f5f6f8;
+  color: #111827;
+  font-size: 28rpx;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+.card-shadow {
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(17, 24, 39, 0.06);
+}
+
+.muted {
+  color: #9ca3af;
+}
+
+.empty {
+  padding: 160rpx 0;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 26rpx;
+}

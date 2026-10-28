@@ -1,0 +1,36 @@
+<view class="page">
+  <view class="header" wx:if="{{home.show_header}}">
+    <view class="h-title">{{home.header_text || '精选图集'}}</view>
+    <view class="h-sub">共 {{list.length}} 个合集</view>
+  </view>
+
+  <view class="ad-wrap" wx:if="{{banners.homeTop}}">
+    <ad unit-id="{{banners.homeTop}}" ad-intervals="60"></ad>
+  </view>
+
+  <view class="promo" wx:if="{{home.show_promo_button}}" bindtap="onPromo">
+    <view class="promo-left">
+      <view class="promo-txt">{{home.promo_text || '看广告解锁全部合集'}}</view>
+      <view class="promo-sub">{{allUnlocked ? '今日已解锁，尽情下载' : '看完整视频即可解锁'}}</view>
+    </view>
+    <view class="promo-btn {{allUnlocked ? 'done' : ''}}">{{allUnlocked ? '已解锁' : '去解锁'}}</view>
+  </view>
+
+  <view class="grid" style="grid-template-columns: repeat({{columns}}, 1fr);">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="onOpen" data-index="{{index}}">
+      <view class="cover-box">
+        <image class="cover" src="{{item.coverUrl}}" mode="aspectFill" lazy-load></image>
+        <view class="badge" wx:if="{{home.show_unlock_badge && !item.unlocked}}">🔒</view>
+        <view class="badge unlocked" wx:if="{{home.show_unlock_badge && item.unlocked}}">✓</view>
+      </view>
+      <view class="meta">
+        <view class="title">{{item.title}}</view>
+        <view class="count muted">{{item.imageCount}} 张</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && list.length === 0}}">暂无合集</view>
+
+  <view class="footer muted" wx:if="{{home.footer_text}}">{{home.footer_text}}</view>
+</view>

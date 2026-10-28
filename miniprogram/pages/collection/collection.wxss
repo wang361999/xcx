@@ -1,0 +1,95 @@
+.page {
+  padding: 28rpx 24rpx 220rpx;
+}
+
+.top {
+  padding: 0 4rpx 24rpx;
+}
+
+.title {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.desc {
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.stat {
+  margin-top: 10rpx;
+  font-size: 23rpx;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.cell {
+  position: relative;
+  width: 100%;
+  height: 220rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.32);
+  backdrop-filter: blur(6rpx);
+}
+
+.lock-icon {
+  font-size: 40rpx;
+  opacity: 0.9;
+}
+
+.ad-wrap {
+  margin-top: 28rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 -4rpx 20rpx rgba(17, 24, 39, 0.06);
+}
+
+.btn {
+  width: 100%;
+  height: 92rpx;
+  line-height: 92rpx;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  padding: 0;
+  margin: 0;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn.primary {
+  background: #111827;
+  color: #fff;
+}
