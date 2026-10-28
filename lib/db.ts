@@ -1,7 +1,6 @@
 /**
  * 数据库连接 - Neon serverless driver (Vercel Postgres 已迁移到 Neon)
  * 专门为 Serverless/Edge 环境设计
- * 返回值包装成 pg/postgres 标准格式 { rows: [...] }
  */
 import { neon } from '@neondatabase/serverless';
 
@@ -22,10 +21,10 @@ function getSql() {
   return sql;
 }
 
-// 通用查询方法，包装成 { rows: [...] } 格式
+// 通用查询方法 - 用 sql.query 支持 $1, $2 参数化
 export async function query(sqlText: string, params?: any[]) {
   const s = getSql();
-  const rows = await s(sqlText, params);
+  const rows = await s.query(sqlText, params);
   return { rows, rowCount: rows.length };
 }
 
