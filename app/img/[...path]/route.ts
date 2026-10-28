@@ -1,7 +1,6 @@
-import { head } from '@vercel/blob';
+import { get } from '@vercel/blob';
 
-// 图片统一入口：小程序只认自己的域名，这里 302 到 Blob 真实地址
-// 好处：不依赖任何 blob 域名配置，也不用在微信后台加额外白名单
+// 图片统一入口：私有 Blob 不暴露公开地址，统一由这里流式输出
 export const runtime = 'nodejs';
 
 export async function GET(
@@ -13,12 +12,13 @@ export async function GET(
   if (!pathname) return new Response('Not found', { status: 404 });
 
   try {
-    const blob = await head(pathname);
-    return new Response(null, {
-      status: 302,
+    const result = await get(pathname, { access: 'private' });
+    if (!result || !result.stream) return new Response('Not found', { status: 404 });
+
+    return new Response(result.stream, {
       headers: {
-        Location: blob.url,
-        // 让微信/CDN 缓存住跳转，避免每次看图都打一次函数
+        'Content-Type': result.blob.contentType || 'image/jpeg',
+        // 图片永不变，让微信端长期缓存，减少函数调用
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });

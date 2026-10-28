@@ -54,7 +54,7 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
     const d = new Date();
     const pathname = `collections/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
     const blob = await upload(pathname, file, {
-      access: 'public',
+      access: 'private',
       handleUploadUrl: '/api/admin/upload/sign',
       multipart: true,
     });

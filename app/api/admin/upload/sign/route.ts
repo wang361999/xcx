@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
         maximumSizeInBytes: 20 * 1024 * 1024,
         addRandomSuffix: true,
         cacheControlMaxAge: 60 * 60 * 24 * 365,
+        // 存储为 private，统一由 /img/* 转发给小程序
+        access: 'private' as const,
       }),
       onUploadCompleted: async () => {
         // 客户端上传完成后会回调这里（本地开发环境不会触发）
