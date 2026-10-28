@@ -41,6 +41,11 @@ export async function GET() {
       dbname,
       tableCount: tables.rows.length,
       tables: tables.rows.map((r: any) => r.tablename),
+      blobEnv: {
+        BLOB_READ_WRITE_TOKEN: !!process.env.BLOB_READ_WRITE_TOKEN,
+        BLOB_STORE_ID: !!process.env.BLOB_STORE_ID,
+        VERCEL_OIDC_TOKEN: !!process.env.VERCEL_OIDC_TOKEN,
+      },
     });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 500 });
