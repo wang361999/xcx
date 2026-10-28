@@ -1,15 +1,15 @@
 /**
  * Next.js 应用启动钩子
- * 自动初始化数据库（建表 + 默认数据）
- * 只在应用启动时执行一次，之后不再跑
+ * 暂时禁用 initDatabase，等 Vercel 环境变量配置好后再启用
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    try {
-      const { initDatabase } = await import('./lib/init');
-      await initDatabase();
-    } catch (e) {
-      console.warn('[instrumentation] DB init skipped:', e);
-    }
-  }
+  // 暂时禁用，避免启动时阻塞 Serverless Function
+  // if (process.env.NEXT_RUNTIME === 'nodejs') {
+  //   try {
+  //     const { initDatabase } = await import('./lib/init');
+  //     await initDatabase();
+  //   } catch (e) {
+  //     console.warn('[instrumentation] DB init skipped:', e);
+  //   }
+  // }
 }
